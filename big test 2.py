@@ -1,0 +1,5 @@
+zombies=int(input("how many zombies?>"))
+rate=int(input("how many do the infect>"))
+days=int(input("how many days>"))
+zombies1=(zombies*((rate+1)**days))
+print(zombies1)
