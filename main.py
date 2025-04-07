@@ -1,9 +1,10 @@
 import pygame
 from math import sqrt,pow,atan,sin,cos,pi,degrees
+import math
 
 import pygame.gfxdraw
 pygame.init()
-screen = pygame.display.set_mode((1280, 720))
+screen = pygame.display.set_mode((1000, 800))
 clock = pygame.time.Clock()
 running = True
 screenWidth=screen.get_width()
@@ -11,7 +12,7 @@ screenHeight=screen.get_height()
 def texturePolygon(pointList,textureName,r):
     myPic=pygame.image.load(textureName).convert()
     myTexture=pygame.transform.rotate(myPic,-degrees(r)).convert_alpha(screen)
-    pygame.gfxdraw.textured_polygon(screen,pointList,myTexture,int((-myTexture.get_width()+myPic.get_width())/2)+int(screenWidth/2)-int(193/2),int((-myTexture.get_height()+myPic.get_height())/2)+int(-screenHeight/2)-int(112/2))
+    pygame.gfxdraw.textured_polygon(screen,pointList,myTexture,int((-myTexture.get_width()+myPic.get_width())/2)+int(screenWidth/2)-int(myPic.get_width()/2),int((-myTexture.get_height()+myPic.get_height())/2)+int(-screenHeight/2)-int(myPic.get_height()/2))
 #Custom fucntion to draw a rotatable rectangle
 def drawRect(x,y,w,h,r):
     w=w/2
@@ -59,42 +60,62 @@ def getMouseAngle(x,y):
 class map1():
     def __init__(self):
         self.roads=pygame.image.load("Untitled(1).png")
-    def draw(self,cameraX,cameraY):
-        xOffset=cameraX%1000
-        yOffset=cameraY%1000
-        for i in range(3):
-            y=(i*1000)-1000
-            for l in range(3):
-                x=(l*1000)-1000
+        self.applyTransform=False
+    def draw(self,cameraX,cameraY,scale):
+        scale=int(1000*scale)
+        xOffset=cameraX%scale
+        yOffset=cameraY%scale
+        tileY=math.ceil(screen.get_height()/scale)+1
+        tileX=math.ceil(screen.get_width()/scale)+1
+        print(screen.get_height(),scale)
+        if self.applyTransform==False:
+            self.roads=pygame.transform.scale(self.roads,(scale,scale))
+            self.applyTransform=True
+        for i in range(tileY):
+            y=(i*scale)-scale
+            for l in range(tileX):
+                x=(l*scale)-scale
                 screen.blit(self.roads,(x+xOffset,y+yOffset))
-x=0
+def giveVector(len,ang):
+    ang=math.radians(ang)
+    x=-sin(ang)*len
+    y=cos(ang)*len
+    return (x,y)
+def drawParticle()
+playerX,playerY=0,0
 angList=[]
+
 while running:
     # poll for events
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.K_w:
-            angList.append(0)
-        if event.type == pygame.K_s:
-            angList.append(180)
-        if event.type == pygame.K_d:
-            angList.append(90)
-        if event.type == pygame.K_a:
-            angList.append(270)
+    keys=pygame.key.get_pressed()
+    if keys[pygame.K_w]:
+        angList.append(0)
+    if keys[pygame.K_s]:
+         angList.append(180)
+    if keys[pygame.K_d]:
+        angList.append(90)
+    if keys[pygame.K_a]:
+         angList.append(270)
     sum=0
+    movement=(0,0)
     for i in range(len(angList)):
         sum=sum+angList[i]
     if len(angList)!=0:
-        sum/len(angList)
+        sum=sum/len(angList)
+        if angList==[0,270]:
+            sum=315
         angList.clear()
         print(sum)
-
+        movement=giveVector(10,sum)
+        playerX=movement[0]+playerX
+        playerY=movement[1]+playerY
     screen.fill("dark green")
-    map1().draw(0,0)
+    map1().draw(playerX,playerY,0.75)
     #draw rect
-    x=x+5
-    drawTRect(screenWidth/2,screenHeight/2,100,100,getMouseAngle(screenWidth/2,screenHeight/2)+pi/2,"Untitled.webp")
+    drawTRect(screenWidth/2,screenHeight/2,50,50,getMouseAngle(screenWidth/2,screenHeight/2),"Untitled.png")
     pygame.display.flip()
 
     clock.tick(60)  # limits FPS to 60
