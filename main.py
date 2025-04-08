@@ -1,7 +1,7 @@
 import pygame
 from math import sqrt,pow,atan,sin,cos,pi,degrees
 import math
-
+from random import randint
 import pygame.gfxdraw
 pygame.init()
 screen = pygame.display.set_mode((1000, 800))
@@ -57,34 +57,48 @@ def getMouseAngle(x,y):
     else:
         return atan((mousePos[1]-y)/(mousePos[0]-x))+pi
 
-class map1():
+class renderClass():
     def __init__(self):
         self.roads=pygame.image.load("Untitled(1).png")
         self.applyTransform=False
-    def draw(self,cameraX,cameraY,scale):
-        scale=int(1000*scale)
-        xOffset=cameraX%scale
-        yOffset=cameraY%scale
-        tileY=math.ceil(screen.get_height()/scale)+1
-        tileX=math.ceil(screen.get_width()/scale)+1
-        print(screen.get_height(),scale)
+        self.particleList=[]
+    def cameraPeriodic(self,cameraX,cameraY,scale):
+        self.scale=int(1000*scale)
+        self.cameraX=cameraX
+        self.cameraY=cameraY
+        for i in range(len(self.particleList)):
+            deletedParticles=0
+            myList=self.particleList[i-deletedParticles]
+            transparency=255-(pygame.time.get_ticks()-myList[2])/myList[3]
+            if transparency<20:
+                self.particleList.pop(i)
+                deletedParticles+=1
+            else:
+                pygame.gfxdraw.filled_circle(screen,int(self.cameraX-myList[0]),int(self.cameraY-myList[1]+int(transparency/10)),myList[4],(222,184,135,transparency))
+    def drawMap1(self):
+        tileY=math.ceil(screen.get_height()/self.scale)+1
+        tileX=math.ceil(screen.get_width()/self.scale)+1
+        xOffset=self.cameraX%self.scale
+        yOffset=self.cameraY%self.scale
         if self.applyTransform==False:
-            self.roads=pygame.transform.scale(self.roads,(scale,scale))
+            self.roads=pygame.transform.scale(self.roads,(self.scale,self.scale))
             self.applyTransform=True
         for i in range(tileY):
-            y=(i*scale)-scale
+            y=(i*self.scale)-self.scale
             for l in range(tileX):
-                x=(l*scale)-scale
+                x=(l*self.scale)-self.scale
                 screen.blit(self.roads,(x+xOffset,y+yOffset))
+    def drawParticle(self,x,y,duration,size):
+        startTime=pygame.time.get_ticks()
+        self.particleList.append((x,y,startTime,duration,size))
 def giveVector(len,ang):
     ang=math.radians(ang)
     x=-sin(ang)*len
     y=cos(ang)*len
     return (x,y)
-def drawParticle()
 playerX,playerY=0,0
 angList=[]
-
+render=renderClass()
 while running:
     # poll for events
     for event in pygame.event.get():
@@ -108,12 +122,14 @@ while running:
         if angList==[0,270]:
             sum=315
         angList.clear()
-        print(sum)
         movement=giveVector(10,sum)
         playerX=movement[0]+playerX
         playerY=movement[1]+playerY
+    if pygame.time.get_ticks()%100==0:
+        render.drawParticle(playerX,playerY,randint(10,20),randint(3,6))
     screen.fill("dark green")
-    map1().draw(playerX,playerY,0.75)
+    render.cameraPeriodic(playerX,playerY,0.75)
+    render.drawMap1()
     #draw rect
     drawTRect(screenWidth/2,screenHeight/2,50,50,getMouseAngle(screenWidth/2,screenHeight/2),"Untitled.png")
     pygame.display.flip()
