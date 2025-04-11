@@ -10,13 +10,13 @@ running = True
 screenWidth=screen.get_width()
 screenHeight=screen.get_height()
 #draws a texture in a set of points
-def texturePolygon(pointList,textureName,r):
+def texturePolygon(x,y,pointList,textureName,r):
     myPic=pygame.image.load(textureName).convert()
     myTexture=pygame.transform.rotate(myPic,-degrees(r)).convert_alpha(screen)
     #all the math is used to work around how livbrary handles the .textured_polygon
-    pygame.gfxdraw.textured_polygon(screen,pointList,myTexture,int((-myTexture.get_width()+myPic.get_width())/2)+int(screenWidth/2)-int(myPic.get_width()/2),int((-myTexture.get_height()+myPic.get_height())/2)+int(-screenHeight/2)-int(myPic.get_height()/2))
+    pygame.gfxdraw.textured_polygon(screen,pointList,myTexture,int((-myTexture.get_width()+myPic.get_width())/2)+int(x)-int(myPic.get_width()/2),int((-myTexture.get_height()+myPic.get_height())/2)+int(-y)-int(myPic.get_height()/2))
 #used to draw a rotatable rectangle
-def drawRect(x,y,w,h,r):
+def drawRect(x,y,w,h,r,color):
     w=w/2
     h=h/2
     distance=sqrt(pow(w,2)+pow(h,2))
@@ -32,7 +32,8 @@ def drawRect(x,y,w,h,r):
             angle=pi-angle
         i[0]=cos(angle+r)*distance+x
         i[1]=sin(angle+r)*distance+y
-    pygame.draw.polygon(screen,"red",pointList)
+    pygame.draw.polygon(screen,color,pointList)
+    return pointList
 #used to draw a rotatable rectangle with a texture
 def drawTRect(x,y,w,h,r,textureName):
     w=w/2
@@ -51,10 +52,15 @@ def drawTRect(x,y,w,h,r,textureName):
         i[0]=cos(angle+r)*distance+x
         i[1]=sin(angle+r)*distance+y
     #Call another function to draw an image inside the set of points(only works for quadrilaterals)
-    texturePolygon(pointList,textureName,r)
-def drawTPoly(pointlist,textureName):
-    myArray=pygame.PixelArray.
-    pygame.pixelcopy.surface_to_array(myArray)
+    texturePolygon(x,y,pointList,textureName,r)
+    return pointList
+def drawPoly(pointlist,color):
+    pygame.gfxdraw.polygon(screen,pointlist,color)
+    '''textureName=pygame.image.load(textureName)
+    myArray=pygame.PixelArray(textureName)
+    print(myArray)
+    myArray.close()
+    screen.blit(myArray.surface,(100,100))'''
 def getMouseAngle(x,y):
     mousePos=pygame.mouse.get_pos()
     #prevent division by 0
@@ -71,6 +77,7 @@ class renderClass():
         self.roads=pygame.image.load("Untitled(1).png")
         self.applyTransform=False
         self.particleList=[]
+        self.buildingList=[]
     def cameraPeriodic(self,cameraX,cameraY,scale):
         self.scale=int(1000*scale)
         self.cameraX=cameraX
@@ -89,8 +96,9 @@ class renderClass():
             for l in range(tileX):
                 x=(l*self.scale)-self.scale
                 screen.blit(self.roads,(x+xOffset,y+yOffset))
+
     def renderPeriodic(self):
-        #Draw Dust Particles
+        #Draw all dust paricles
         self.deletedParticles=0
         for i in range(len(self.particleList)):
             myList=self.particleList[i-self.deletedParticles]
@@ -100,9 +108,20 @@ class renderClass():
                 self.deletedParticles+=1
             else:
                 pygame.gfxdraw.filled_circle(screen,int(self.cameraX-myList[0]),int(self.cameraY-myList[1]+int(transparency/10)),myList[4],(222,184,135,transparency))
+        #Draw all buildings
+        for i in range(len(self.buildingList)):
+            x,y,w,h,height=self.buildingList[i]
+            bottomPoints=drawRect(x+self.cameraX,y+self.cameraY,w,h,0,"darkgrey")
+            topPoints=drawRect((x+self.cameraX-screenWidth/2)*height+screenWidth/2,(y+self.cameraY-screenHeight/2)*height+screenHeight/2,w,h,0,"grey")
+            for i in range(4):
+                i=i-1
+                drawPoly((bottomPoints[i],bottomPoints[i+1],topPoints[i+1],topPoints[i]),(255,0,0))
+            drawRect((x+self.cameraX-screenWidth/2)*height+screenWidth/2,(y+self.cameraY-screenHeight/2)*height+screenHeight/2,w,h,0,"grey")
     def drawDustParticle(self,x,y,duration,size):
         startTime=pygame.time.get_ticks()
         self.particleList.append((x,y,startTime,duration,size))
+    def drawBuilding(self,x,y,w,h,height):
+        self.buildingList.append((x,y,w,h,height))
 def giveVector(len,ang):
     ang=math.radians(ang)
     x=-sin(ang)*len
@@ -111,6 +130,8 @@ def giveVector(len,ang):
 playerX,playerY=0,0
 angList=[]
 render=renderClass()
+render.drawBuilding(0,0,200,200,1.2)
+render.drawBuilding(1000,1000,100,100,1.1)
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -137,13 +158,13 @@ while running:
         movement=giveVector(10,sum)
         playerX=movement[0]+playerX
         playerY=movement[1]+playerY
-        render.drawDustParticle(playerX-screenWidth/2,playerY+25-screenHeight/2,randint(2,5),randint(3,6))#draw particles when player is moving
+        render.drawDustParticle(playerX-screenWidth/2,playerY-screenHeight/2,randint(2,5),randint(3,6))#draw particles when player is moving
     screen.fill("dark green")
     render.cameraPeriodic(playerX,playerY,0.75)
     render.drawMap1()
     render.renderPeriodic()
     #draw the player character
-    drawTRect(screenWidth/2,screenHeight/2,50,50,getMouseAngle(screenWidth/2,screenHeight/2),"Untitled.png")
+    drawTRect(screenWidth/2,screenHeight/2+25,50,50,getMouseAngle(screenWidth/2,screenHeight/2),"Untitled.png")
     pygame.display.flip()
     clock.tick(60)  # limits FPS to 60
 
