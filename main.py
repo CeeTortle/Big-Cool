@@ -55,7 +55,7 @@ def drawTRect(x,y,w,h,r,textureName):
     texturePolygon(x,y,pointList,textureName,r)
     return pointList
 def drawPoly(pointlist,color):
-    pygame.gfxdraw.polygon(screen,pointlist,color)
+    pygame.gfxdraw.filled_polygon(screen,pointlist,color)
     '''textureName=pygame.image.load(textureName)
     myArray=pygame.PixelArray(textureName)
     print(myArray)
@@ -88,6 +88,7 @@ class renderClass():
         xOffset=self.cameraX%self.scale
         yOffset=self.cameraY%self.scale
         #Infinitlet draw roads
+        self.buildingList.clear()
         if self.applyTransform==False:
             self.roads=pygame.transform.scale(self.roads,(self.scale,self.scale))
             self.applyTransform=True
@@ -96,7 +97,21 @@ class renderClass():
             for l in range(tileX):
                 x=(l*self.scale)-self.scale
                 screen.blit(self.roads,(x+xOffset,y+yOffset))
-
+                tileCenter=((-self.cameraX+xOffset)+x,(-self.cameraY+yOffset)+y)
+                tileId=(tileCenter[0]/750,+tileCenter[1])
+                #tileId[0] counts by 1's
+                #tileId[1] counts by 750's
+                if tileId[0]%3==0 and tileId[1]%1500==0:
+                    self.drawBuilding(tileCenter[0],tileCenter[1],400,400,1.5)
+                elif tileId[0]%4==0 and tileId[1]%2250==0:
+                    self.drawBuilding(tileCenter[0]+200,tileCenter[1],200,500,1.15)
+                    self.drawBuilding(tileCenter[0]+200,tileCenter[1],200,500,1.1)
+                    self.drawBuilding(tileCenter[0]+200,tileCenter[1],200,500,1.1)
+                else:
+                    self.drawBuilding(tileCenter[0]-150,tileCenter[1]-150,250,250,1.1)
+                    self.drawBuilding(tileCenter[0]-150,tileCenter[1]+150,250,250,1.1)
+                    self.drawBuilding(tileCenter[0]+150,tileCenter[1]-150,250,250,1.1)
+                    self.drawBuilding(tileCenter[0]+150,tileCenter[1]+150,250,250,1.1)
     def renderPeriodic(self):
         #Draw all dust paricles
         self.deletedParticles=0
@@ -115,7 +130,7 @@ class renderClass():
             topPoints=drawRect((x+self.cameraX-screenWidth/2)*height+screenWidth/2,(y+self.cameraY-screenHeight/2)*height+screenHeight/2,w,h,0,"grey")
             for i in range(4):
                 i=i-1
-                drawPoly((bottomPoints[i],bottomPoints[i+1],topPoints[i+1],topPoints[i]),(255,0,0))
+                drawPoly((bottomPoints[i],bottomPoints[i+1],topPoints[i+1],topPoints[i]),(50*(i+1),50*(i+1),50*(i+1)))
             drawRect((x+self.cameraX-screenWidth/2)*height+screenWidth/2,(y+self.cameraY-screenHeight/2)*height+screenHeight/2,w,h,0,"grey")
     def drawDustParticle(self,x,y,duration,size):
         startTime=pygame.time.get_ticks()
@@ -130,8 +145,6 @@ def giveVector(len,ang):
 playerX,playerY=0,0
 angList=[]
 render=renderClass()
-render.drawBuilding(0,0,200,200,1.2)
-render.drawBuilding(1000,1000,100,100,1.1)
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
