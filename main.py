@@ -104,9 +104,9 @@ class renderClass():
                 if tileId[0]%3==0 and tileId[1]%1500==0:
                     self.drawBuilding(tileCenter[0],tileCenter[1],400,400,1.5)
                 elif tileId[0]%4==0 and tileId[1]%2250==0:
-                    self.drawBuilding(tileCenter[0]+200,tileCenter[1],200,500,1.15)
                     self.drawBuilding(tileCenter[0]+200,tileCenter[1],200,500,1.1)
-                    self.drawBuilding(tileCenter[0]+200,tileCenter[1],200,500,1.1)
+                    self.drawBuilding(tileCenter[0]-75,tileCenter[1]+190,300,125,1.1)
+                    self.drawBuilding(tileCenter[0]-75,tileCenter[1]-190,300,125,1.1)
                 else:
                     self.drawBuilding(tileCenter[0]-150,tileCenter[1]-150,250,250,1.1)
                     self.drawBuilding(tileCenter[0]-150,tileCenter[1]+150,250,250,1.1)
